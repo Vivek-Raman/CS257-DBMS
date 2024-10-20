@@ -33,7 +33,7 @@ typedef struct tpd_entry_def
 } tpd_entry;
 
 /* Table packed descriptor list = 4+4+4+36 = 48 bytes.  When no
-   table is defined the tpd_list is 48 bytes.  When there is 
+   table is defined the tpd_list is 48 bytes.  When there is
 	 at least 1 table, then the tpd_entry (36 bytes) will be
 	 overlapped by the first valid tpd_entry. */
 typedef struct tpd_list_def
@@ -46,7 +46,7 @@ typedef struct tpd_list_def
 
 /* This token_list definition is used for breaking the command
    string into separate tokens in function get_tokens().  For
-	 each token, a new token_list will be allocated and linked 
+	 each token, a new token_list will be allocated and linked
 	 together. */
 typedef struct t_list
 {
@@ -56,7 +56,7 @@ typedef struct t_list
 	struct t_list *next;
 } token_list;
 
-/* This enum defines the different classes of tokens for 
+/* This enum defines the different classes of tokens for
 	 semantic processing. */
 typedef enum t_class
 {
@@ -68,7 +68,7 @@ typedef enum t_class
   function_name,// 6
 	terminator,		// 7
 	error			    // 8
-  
+
 } token_class;
 
 /* This enum defines the different values associated with
@@ -76,8 +76,8 @@ typedef enum t_class
 typedef enum t_value
 {
 	T_INT = 10,		// 10 - new type should be added above this line
-	T_VARCHAR,		    // 11 
-	T_CHAR,		    // 12       
+	T_VARCHAR,		    // 11
+	T_CHAR,		    // 12
 	K_CREATE, 		// 13
 	K_TABLE,			// 14
 	K_NOT,				// 15
@@ -124,10 +124,10 @@ typedef enum t_value
 
 /* New keyword must be added in the same position/order as the enum
    definition above, otherwise the lookup will be wrong */
-char *keyword_table[] = 
+char *keyword_table[] =
 {
   "int", "varchar", "char", "create", "table", "not", "null", "drop", "list", "schema",
-  "for", "to", "insert", "into", "values", "delete", "from", "where", 
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
   "sum", "avg", "count"
 };
@@ -176,6 +176,7 @@ int sem_create_table(token_list *t_list);
 int sem_drop_table(token_list *t_list);
 int sem_list_tables();
 int sem_list_schema(token_list *t_list);
+int sem_insert(token_list *t_list);
 
 /*
 	Keep a global list of tpd - in real life, this will be stored

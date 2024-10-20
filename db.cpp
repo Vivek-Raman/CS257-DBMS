@@ -16,13 +16,19 @@
 
 int main(int argc, char** argv)
 {
+  // TODO: remove this!
+  char* my_command = "list table";
 	int rc = 0;
 	token_list *tok_list=NULL, *tok_ptr=NULL, *tmp_tok_ptr=NULL;
 
 	if ((argc != 2) || (strlen(argv[1]) == 0))
 	{
-		printf("Usage: db \"command statement\"\n");
-		return 1;
+    // TODO: remove this!
+    argv[1] = (char*) calloc(strlen(my_command), sizeof(char));
+    strcpy(argv[1], my_command);
+		printf("Using command: %s\n", argv[1]);
+		// printf("Usage: db \"command statement\"\n");
+		// return 1;
 	}
 
 	rc = initialize_tpd_list();
@@ -43,7 +49,7 @@ int main(int argc, char** argv)
 				      tok_ptr->tok_value);
 			tok_ptr = tok_ptr->next;
 		}
-    
+
 		if (!rc)
 		{
 			rc = do_semantic(tok_list);
@@ -78,7 +84,7 @@ int main(int argc, char** argv)
 	return rc;
 }
 
-/************************************************************* 
+/*************************************************************
 	This is a lexical analyzer for simple SQL statements
  *************************************************************/
 int get_token(char* command, token_list** tok_list)
@@ -86,7 +92,7 @@ int get_token(char* command, token_list** tok_list)
 	int rc=0,i,j;
 	char *start, *cur, temp_string[MAX_TOK_LEN];
 	bool done = false;
-	
+
 	start = cur = command;
 	while (!done)
 	{
@@ -104,7 +110,7 @@ int get_token(char* command, token_list** tok_list)
 		{
 			// find valid identifier
 			int t_class;
-			do 
+			do
 			{
 				temp_string[i++] = *cur++;
 			}
@@ -167,7 +173,7 @@ int get_token(char* command, token_list** tok_list)
 		else if (isdigit(*cur))
 		{
 			// find valid number
-			do 
+			do
 			{
 				temp_string[i++] = *cur++;
 			}
@@ -225,7 +231,7 @@ int get_token(char* command, token_list** tok_list)
       /* Find STRING_LITERRAL */
 			int t_class;
       cur++;
-			do 
+			do
 			{
 				temp_string[i++] = *cur++;
 			}
@@ -268,7 +274,7 @@ int get_token(char* command, token_list** tok_list)
 			}
 		}
 	}
-			
+
   return rc;
 }
 
@@ -353,11 +359,13 @@ int do_semantic(token_list *tok_list)
 			case LIST_SCHEMA:
 						rc = sem_list_schema(cur);
 						break;
+      case INSERT:
+            rc = sem_insert(cur);
 			default:
 					; /* no action */
 		}
 	}
-	
+
 	return rc;
 }
 
@@ -447,7 +455,7 @@ int sem_create_table(token_list *t_list)
                 /* Set the column type here, int or char */
 								col_entry[cur_id].col_type = cur->tok_value;
 								cur = cur->next;
-		
+
 								if (col_entry[cur_id].col_type == T_INT)
 								{
 									if ((cur->tok_value != S_COMMA) &&
@@ -460,20 +468,20 @@ int sem_create_table(token_list *t_list)
 								  else
 									{
 										col_entry[cur_id].col_len = sizeof(int);
-										
+
 										if ((cur->tok_value == K_NOT) &&
 											  (cur->next->tok_value != K_NULL))
 										{
 											rc = INVALID_COLUMN_DEFINITION;
 											cur->tok_value = INVALID;
-										}	
+										}
 										else if ((cur->tok_value == K_NOT) &&
 											    (cur->next->tok_value == K_NULL))
-										{					
+										{
 											col_entry[cur_id].not_null = true;
 											cur = cur->next->next;
 										}
-	
+
 										if (!rc)
 										{
 											/* I must have either a comma or right paren */
@@ -496,7 +504,7 @@ int sem_create_table(token_list *t_list)
 								}   // end of T_INT processing
 								else
 								{
-									// It must be char() or varchar() 
+									// It must be char() or varchar()
 									if (cur->tok_value != S_LEFT_PAREN)
 									{
 										rc = INVALID_COLUMN_DEFINITION;
@@ -506,7 +514,7 @@ int sem_create_table(token_list *t_list)
 									{
 										/* Enter char(n) processing */
 										cur = cur->next;
-		
+
 										if (cur->tok_value != INT_LITERAL)
 										{
 											rc = INVALID_COLUMN_LENGTH;
@@ -517,7 +525,7 @@ int sem_create_table(token_list *t_list)
 											/* Got a valid integer - convert */
 											col_entry[cur_id].col_len = atoi(cur->tok_string);
 											cur = cur->next;
-											
+
 											if (cur->tok_value != S_RIGHT_PAREN)
 											{
 												rc = INVALID_COLUMN_DEFINITION;
@@ -526,7 +534,7 @@ int sem_create_table(token_list *t_list)
 											else
 											{
 												cur = cur->next;
-						
+
 												if ((cur->tok_value != S_COMMA) &&
 														(cur->tok_value != K_NOT) &&
 														(cur->tok_value != S_RIGHT_PAREN))
@@ -544,11 +552,11 @@ int sem_create_table(token_list *t_list)
 													}
 													else if ((cur->tok_value == K_NOT) &&
 																	 (cur->next->tok_value == K_NULL))
-													{					
+													{
 														col_entry[cur_id].not_null = true;
 														cur = cur->next->next;
 													}
-		
+
 													if (!rc)
 													{
 														/* I must have either a comma or right paren */
@@ -582,7 +590,7 @@ int sem_create_table(token_list *t_list)
 					}
 
 				} while ((rc == 0) && (!column_done));
-	
+
 				if ((column_done) && (cur->tok_value != EOC))
 				{
 					rc = INVALID_TABLE_DEFINITION;
@@ -593,7 +601,7 @@ int sem_create_table(token_list *t_list)
 				{
 					/* Now finished building tpd and add it to the tpd list */
 					tab_entry.num_columns = cur_id;
-					tab_entry.tpd_size = sizeof(tpd_entry) + 
+					tab_entry.tpd_size = sizeof(tpd_entry) +
 															 sizeof(cd_entry) *	tab_entry.num_columns;
 				  tab_entry.cd_offset = sizeof(tpd_entry);
 					new_entry = (tpd_entry*)calloc(1, tab_entry.tpd_size);
@@ -607,11 +615,11 @@ int sem_create_table(token_list *t_list)
 						memcpy((void*)new_entry,
 							     (void*)&tab_entry,
 									 sizeof(tpd_entry));
-		
+
 						memcpy((void*)((char*)new_entry + sizeof(tpd_entry)),
 									 (void*)col_entry,
 									 sizeof(cd_entry) * tab_entry.num_columns);
-	
+
 						rc = add_tpd_to_list(new_entry);
 
 						free(new_entry);
@@ -733,7 +741,7 @@ int sem_list_schema(token_list *t_list)
 				if (cur->tok_value == K_TO)
 				{
 					cur = cur->next;
-					
+
 					if ((cur->tok_class != keyword) &&
 						  (cur->tok_class != identifier) &&
 							(cur->tok_class != type_name))
@@ -758,7 +766,7 @@ int sem_list_schema(token_list *t_list)
 					}
 				}
 				else
-				{ 
+				{
 					/* Missing the TO keyword */
 					rc = INVALID_STATEMENT;
 					cur->tok_value = INVALID;
@@ -791,7 +799,7 @@ int sem_list_schema(token_list *t_list)
 						printf("Table Name               (table_name)  = %s\n", tab_entry->table_name);
 						printf("Number of Columns        (num_columns) = %d\n", tab_entry->num_columns);
 						printf("Column Descriptor Offset (cd_offset)   = %d\n", tab_entry->cd_offset);
-            printf("Table PD Flags           (tpd_flags)   = %d\n\n", tab_entry->tpd_flags); 
+            printf("Table PD Flags           (tpd_flags)   = %d\n\n", tab_entry->tpd_flags);
 
 						if (report)
 						{
@@ -799,7 +807,7 @@ int sem_list_schema(token_list *t_list)
 							fprintf(fhandle, "Table Name               (table_name)  = %s\n", tab_entry->table_name);
 							fprintf(fhandle, "Number of Columns        (num_columns) = %d\n", tab_entry->num_columns);
 							fprintf(fhandle, "Column Descriptor Offset (cd_offset)   = %d\n", tab_entry->cd_offset);
-              fprintf(fhandle, "Table PD Flags           (tpd_flags)   = %d\n\n", tab_entry->tpd_flags); 
+              fprintf(fhandle, "Table PD Flags           (tpd_flags)   = %d\n\n", tab_entry->tpd_flags);
 						}
 
 						/* Next, write the cd_entry information */
@@ -821,17 +829,25 @@ int sem_list_schema(token_list *t_list)
 								fprintf(fhandle, "Not Null Flag (not_null) = %d\n\n", col_entry->not_null);
 							}
 						}
-	
+
 						if (report)
 						{
 							fflush(fhandle);
 							fclose(fhandle);
 						}
-					} // File open error							
+					} // File open error
 				} // Table not exist
 			} // no semantic errors
 		} // Invalid table name
 	} // Invalid statement
+
+  return rc;
+}
+
+int sem_insert(token_list *t_list)
+{
+  int rc = 0;
+	FILE *fhandle = NULL;
 
   return rc;
 }
@@ -854,7 +870,7 @@ int initialize_tpd_list()
 		{
 			g_tpd_list = NULL;
 			g_tpd_list = (tpd_list*)calloc(1, sizeof(tpd_list));
-			
+
 			if (!g_tpd_list)
 			{
 				rc = MEMORY_ERROR;
@@ -894,10 +910,10 @@ int initialize_tpd_list()
 
 		}
 	}
-    
+
 	return rc;
 }
-	
+
 int add_tpd_to_list(tpd_entry *tpd)
 {
 	int rc = 0;
@@ -1013,7 +1029,7 @@ int drop_tpd_from_list(char *tabname)
 							   next entry which is (cur + cur->tpd_size) and the remaining size */
 							fwrite((char*)cur + cur->tpd_size,
 										 old_size - cur->tpd_size -
-										 ((char*)cur - (char*)g_tpd_list),							     
+										 ((char*)cur - (char*)g_tpd_list),
 								     1, fhandle);
 						}
 					}
@@ -1022,7 +1038,7 @@ int drop_tpd_from_list(char *tabname)
 					fclose(fhandle);
 				}
 
-				
+
 			}
 			else
 			{
@@ -1034,7 +1050,7 @@ int drop_tpd_from_list(char *tabname)
 			}
 		}
 	}
-	
+
 	if (!found)
 	{
 		rc = INVALID_TABLE_NAME;
