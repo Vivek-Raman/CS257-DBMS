@@ -1,0 +1,5 @@
+.~lock*
+db
+dbfile.bin
+.vscode/
+*.docx
