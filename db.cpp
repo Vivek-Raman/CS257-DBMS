@@ -17,7 +17,10 @@
 int main(int argc, char** argv)
 {
   // TODO: remove this!
-  char* my_command = "list table";
+  // char* my_command = "drop table student";
+  char* my_command = "create table student (name VARCHAR(10), id INT, dept VARCHAR(10))";
+  // char* my_command = "list schema for student";
+  // char* my_command = "insert into student values ('Student', 12345, NULL)";
 	int rc = 0;
 	token_list *tok_list=NULL, *tok_ptr=NULL, *tmp_tok_ptr=NULL;
 
@@ -337,6 +340,13 @@ int do_semantic(token_list *tok_list)
 		cur_cmd = LIST_SCHEMA;
 		cur = cur->next->next;
 	}
+	else if ((cur->tok_value == K_INSERT) &&
+					((cur->next != NULL) && (cur->next->tok_value == K_INTO)))
+	{
+		printf("INSERT INTO statement\n");
+		cur_cmd = INSERT;
+		cur = cur->next->next;
+	}
 	else
   {
 		printf("Invalid statement\n");
@@ -621,6 +631,9 @@ int sem_create_table(token_list *t_list)
 									 sizeof(cd_entry) * tab_entry.num_columns);
 
 						rc = add_tpd_to_list(new_entry);
+            // TODO: Handle failed rc
+            rc = create_table_file(new_entry);
+
 
 						free(new_entry);
 					}
@@ -664,6 +677,8 @@ int sem_drop_table(token_list *t_list)
 			{
 				/* Found a valid tpd, drop it from tpd list */
 				rc = drop_tpd_from_list(cur->tok_string);
+        // TODO: handle error rc
+        rc = delete_table_file(cur->tok_string);
 			}
 		}
 	}
@@ -847,7 +862,8 @@ int sem_list_schema(token_list *t_list)
 int sem_insert(token_list *t_list)
 {
   int rc = 0;
-	FILE *fhandle = NULL;
+	FILE* fhandle = NULL;
+  token_list* t_iter = t_list;
 
   return rc;
 }
@@ -1087,4 +1103,47 @@ tpd_entry* get_tpd_from_list(char *tabname)
 	}
 
 	return tpd;
+}
+
+int create_table_file(tpd_entry* created_table)
+{
+  int rc = 0;
+  char* filename = get_filename_from_table_name(created_table->table_name);
+
+  FILE* file_handle = NULL;
+
+  if ((file_handle = fopen(filename, "wbc")) == NULL)
+  {
+    rc = FILE_OPEN_ERROR;
+    return rc;
+  }
+
+  fclose(file_handle);
+  return rc;
+}
+
+int delete_table_file(char* table_name)
+{
+  int rc = 0;
+  char* filename = get_filename_from_table_name(table_name);
+
+  FILE* file_handle = NULL;
+
+  if ((file_handle = fopen(filename, "wbc")) == NULL)
+  {
+    rc = FILE_OPEN_ERROR;
+    return rc;
+  }
+
+  // TODO: delete file
+  // (file_handle);
+  return rc;
+}
+
+char* get_filename_from_table_name(char* table_name)
+{
+  char* filename = (char*)calloc(strlen(table_name + 4), sizeof(char));
+  strcat(filename, table_name);
+  strcat(filename, ".tab");
+  return filename;
 }

@@ -187,3 +187,4 @@ int initialize_tpd_list();
 int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
 tpd_entry* get_tpd_from_list(char *tabname);
+int create_table_file(tpd_entry* created_table);
