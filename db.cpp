@@ -1105,18 +1105,50 @@ tpd_entry* get_tpd_from_list(char *tabname)
 	return tpd;
 }
 
+char* get_filename_from_table_name(char* table_name)
+{
+  char* filename = (char*)calloc(strlen(table_name + 4), sizeof(char));
+  strcat(filename, table_name);
+  strcat(filename, ".tab");
+  return filename;
+}
+
+int get_record_size(tpd_entry* table)
+{
+  int size = 0;
+
+  cd_entry* column = (cd_entry*)((char*)table + table->cd_offset);
+  for (int column_iter = 0; column_iter < table->num_columns; ++column_iter)
+  {
+    size += column->col_len;
+    column++;
+  }
+
+  printf("Record size: %d\n", size);
+  return size;
+}
+
 int create_table_file(tpd_entry* created_table)
 {
   int rc = 0;
   char* filename = get_filename_from_table_name(created_table->table_name);
 
   FILE* file_handle = NULL;
+  table_file_header* header = (table_file_header*) calloc(1, sizeof(table_file_header));
+  header->file_size;
+  header->record_size = get_record_size(created_table);
+  header->tpd_ptr = get_tpd_from_list(created_table->table_name);
+  header->record_offset;
+  header->num_records = 0;
+  header->file_header_flag;
 
   if ((file_handle = fopen(filename, "wbc")) == NULL)
   {
     rc = FILE_OPEN_ERROR;
     return rc;
   }
+
+  fwrite(header, header->record_size * header->record_offset, 1, file_handle);
 
   fclose(file_handle);
   return rc;
@@ -1135,15 +1167,6 @@ int delete_table_file(char* table_name)
     return rc;
   }
 
-  // TODO: delete file
-  // (file_handle);
+  remove(filename);
   return rc;
-}
-
-char* get_filename_from_table_name(char* table_name)
-{
-  char* filename = (char*)calloc(strlen(table_name + 4), sizeof(char));
-  strcat(filename, table_name);
-  strcat(filename, ".tab");
-  return filename;
 }

@@ -56,6 +56,16 @@ typedef struct t_list
 	struct t_list *next;
 } token_list;
 
+typedef struct table_file_header_def
+{
+	int			file_size;			  // 4 bytes
+	int			record_size;			// 4 bytes
+	int			num_records;			// 4 bytes
+	int			record_offset;		// 4 bytes
+	int			file_header_flag;	// 4 bytes
+	tpd_entry		*tpd_ptr;			// 8 bytes. (e.g. 64-bit pointer)
+} table_file_header;
+
 /* This enum defines the different classes of tokens for
 	 semantic processing. */
 typedef enum t_class
@@ -187,4 +197,8 @@ int initialize_tpd_list();
 int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
 tpd_entry* get_tpd_from_list(char *tabname);
+int get_record_size(tpd_entry* table);
+
+char* get_filename_from_table_name(char* table_name);
 int create_table_file(tpd_entry* created_table);
+int delete_table_file(char* table_name);
